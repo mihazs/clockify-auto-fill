@@ -4,7 +4,7 @@
 
 [![npm version](https://badge.fury.io/js/clockify-auto-fill.svg)](https://badge.fury.io/js/clockify-auto-fill)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js CI](https://github.com/your-username/clockify-auto-fill/workflows/CI/badge.svg)](https://github.com/your-username/clockify-auto-fill/actions)
+[![Node.js CI](https://github.com/mihazs/clockify-auto-fill/workflows/CI/badge.svg)](https://github.com/mihazs/clockify-auto-fill/actions)
 
 **Automated time tracking for Clockify with Jira integration**
 
@@ -70,7 +70,7 @@ clockify-auto config
 
 ## 📋 Prerequisites
 
-- **Node.js** 16+ 
+- **Node.js** 20+ 
 - **Clockify Account** with API access
 - **Jira Cloud Account** (optional, for task integration)
 
@@ -237,7 +237,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           
       - name: Install Clockify Auto-Fill
         run: npm install -g clockify-auto-fill
@@ -331,6 +331,11 @@ When configured, the tool will:
 
 ## 🔧 Development
 
+### Prerequisites
+
+- Node.js 20+ 
+- npm or yarn
+
 ### Local Development
 
 ```bash
@@ -380,6 +385,8 @@ npm run lint
 | `npm run lint:fix` | Fix ESLint issues |
 | `npm run semantic-release` | Create automated release |
 | `npm run semantic-release:dry-run` | Preview release changes |
+| `npm run test:release` | Test semantic-release configuration |
+| `npm run test:direct-push` | Learn about direct push workflow |
 
 ## 🚀 Release Process
 
@@ -388,13 +395,15 @@ This project uses **automated semantic releases** powered by [semantic-release](
 ### How It Works
 
 1. **Development**: Make changes using [conventional commits](https://conventionalcommits.org/)
-2. **Pull Request**: Create PR with your changes
-3. **Automated Release**: On merge to `main`, semantic-release will:
+2. **Push to Main**: Either create PR and merge, or push directly to `main`
+3. **Automated Release**: On any push to `main` (PR merge or direct push), semantic-release will:
    - Analyze commits to determine version bump
    - Generate changelog from conventional commits
+   - **Create Git tags** automatically (format: `v1.2.3`)
    - Create GitHub release with release notes  
    - Publish to npm automatically
    - Update version in package.json
+   - Commit changes back to repository
 
 ### Commit Types and Releases
 
@@ -402,7 +411,7 @@ This project uses **automated semantic releases** powered by [semantic-release](
 |-------------|---------|--------------|
 | `feat:` | `feat: add custom work hours` | Minor (1.1.0) |
 | `fix:` | `fix: resolve API rate limiting` | Patch (1.0.1) |
-| `feat!:` | `feat!: remove Node 14 support` | Major (2.0.0) |
+| `feat!:` | `feat!: remove Node 18 support` | Major (2.0.0) |
 | `docs:`, `refactor:` | `docs: update README` | Patch (1.0.1) |
 | `chore:`, `style:`, `test:` | `chore: update deps` | No release |
 
@@ -414,7 +423,43 @@ npm run semantic-release:dry-run
 
 # View commit history for release planning
 git log --oneline --decorate --graph
+
+# View existing tags
+git tag --list --sort=-version:refname
+
+# View latest release tag
+git describe --tags --abbrev=0
 ```
+
+### Tag Format
+
+- **Production releases**: `v1.2.3` (from `main` branch)
+- **Beta releases**: `v1.2.3-beta.1` (from `develop` branch)
+- All tags are automatically created and pushed during the release process
+
+### Release Triggers
+
+The automated release process supports multiple trigger methods:
+
+1. **PR Merge**: Merge pull request into `main` branch
+   ```bash
+   git checkout feature-branch
+   git commit -m "feat: add awesome feature"
+   # Create PR, review, and merge
+   ```
+
+2. **Direct Push**: Push conventional commits directly to `main`
+   ```bash
+   git checkout main
+   git commit -m "fix: resolve critical bug"
+   git push origin main  # ← Triggers automatic release
+   ```
+
+3. **Manual Trigger**: Use GitHub Actions workflow dispatch
+   - Go to Actions → Release → Run workflow
+   - Option to force release even without new commits
+
+All methods will automatically create Git tags and releases! 🏷️
 
 ## 🐛 Troubleshooting
 
@@ -460,8 +505,8 @@ DEBUG=clockify-auto:* clockify-auto run
 ### Getting Help
 
 1. 📖 Check this documentation
-2. 🐛 [Open an issue](https://github.com/your-username/clockify-auto-fill/issues)
-3. 💬 [Start a discussion](https://github.com/your-username/clockify-auto-fill/discussions)
+2. 🐛 [Open an issue](https://github.com/mihazs/clockify-auto-fill/issues)
+3. 💬 [Start a discussion](https://github.com/mihazs/clockify-auto-fill/discussions)
 
 ## 🤝 Contributing
 
@@ -510,7 +555,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**[⭐ Star this project](https://github.com/your-username/clockify-auto-fill)** if you find it useful!
+**[⭐ Star this project](https://github.com/mihazs/clockify-auto-fill)** if you find it useful!
 
 Made with ❤️ for developers who forget to track time
 

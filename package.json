@@ -17,7 +17,9 @@
     "dev:watch": "tsc --watch",
     "prepublishOnly": "npm run build && npm test",
     "semantic-release": "semantic-release",
-    "semantic-release:dry-run": "semantic-release --dry-run"
+    "semantic-release:dry-run": "semantic-release --dry-run",
+    "test:release": "./scripts/test-release.sh",
+    "test:direct-push": "./scripts/test-direct-push.sh"
   },
   "keywords": [
     "clockify",
@@ -74,7 +76,7 @@
   },
   "homepage": "https://github.com/mihazs/clockify-auto-fill#readme",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   },
   "files": [
     "dist/**/*",

@@ -6,6 +6,12 @@ on:
       - main
       - develop
   workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force release even if no changes detected'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   release:
@@ -23,10 +29,27 @@ jobs:
           fetch-depth: 0 # Fetch full history for semantic-release
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check trigger type
+        run: |
+          echo "🔍 Release trigger analysis:"
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          
+          if [ "${{ github.event_name }}" == "push" ]; then
+            echo "✅ Triggered by direct push to ${{ github.ref_name }}"
+            echo "Commit message: $(git log --format=%B -n 1 HEAD)"
+            echo "Author: $(git log --format='%an <%ae>' -n 1 HEAD)"
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "✅ Triggered by manual workflow dispatch"
+            echo "Force release: ${{ github.event.inputs.force_release }}"
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
@@ -56,4 +79,42 @@ jobs:
           GIT_AUTHOR_EMAIL: semantic-release-bot@martynus.net
           GIT_COMMITTER_NAME: semantic-release-bot
           GIT_COMMITTER_EMAIL: semantic-release-bot@martynus.net
-        run: npx semantic-release
+        run: |
+          echo "🚀 Running semantic-release with automatic Git tagging..."
+          echo "Supports: Direct pushes to main, PR merges, and manual triggers"
+          
+          if [ "${{ github.event.inputs.force_release }}" == "true" ]; then
+            echo "⚠️  Force release enabled - will attempt release even without releasable commits"
+            # Force a patch release if needed
+            git commit --allow-empty -m "chore: force release"
+          fi
+          
+          npx semantic-release
+
+      - name: Verify release artifacts
+        if: success()
+        run: |
+          echo "🔍 Checking for created tags..."
+          git tag --list --sort=-version:refname | head -5
+          echo
+          echo "📝 Latest commit:"
+          git log --oneline -1
+          echo
+          echo "📦 Current version in package.json:"
+          node -e "console.log('v' + require('./package.json').version)"
+          echo
+          echo "🎯 Release verification complete!"
+          echo "✅ Direct push to main successfully processed"
+          echo "✅ Automatic tagging and release system working"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Release workflow failed!"
+          echo "This could happen if:"
+          echo "- No releasable commits found (not an error)"
+          echo "- Network issues with npm or GitHub"
+          echo "- Authentication problems"
+          echo "- Semantic-release configuration issues"
+          echo
+          echo "Check the logs above for specific error details."

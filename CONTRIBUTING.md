@@ -25,14 +25,14 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 
 ### Prerequisites
 
-- Node.js 16+ 
+- Node.js 20+ 
 - npm or yarn
 
 ### Local Development
 
 ```bash
 # Clone your fork
-git clone https://github.com/your-username/clockify-auto-fill.git
+git clone https://github.com/mihazs/clockify-auto-fill.git
 cd clockify-auto-fill
 
 # Install dependencies
@@ -133,10 +133,10 @@ We use [Conventional Commits](https://conventionalcommits.org/) for automated re
 Add `!` after the type/scope or include `BREAKING CHANGE:` in the footer:
 
 ```
-feat!: remove support for Node.js 14
+feat!: remove support for Node.js 18
 feat: add new API endpoint
 
-BREAKING CHANGE: Node.js 14 is no longer supported
+BREAKING CHANGE: Node.js 18 is no longer supported
 ```
 
 ### Examples
@@ -165,6 +165,7 @@ ci: update GitHub Actions workflow
 # Breaking changes (major version bump)
 feat!: remove deprecated configuration options
 fix!: change default work hours format to 24-hour
+feat!: require Node.js 20+ (drop Node.js 18 support)
 ```
 
 ### Setup Git Commit Template
@@ -177,9 +178,46 @@ git config commit.template .gitmessage
 
 This will show helpful commit guidelines when you run `git commit`.
 
+### Automated Tagging
+
+When changes are pushed to `main` (via PR merge or direct push), semantic-release will:
+
+1. **Analyze commits** since the last release
+2. **Determine version bump** based on conventional commits
+3. **Create Git tag** automatically (e.g., `v1.2.3`)
+4. **Push tag** to GitHub
+5. **Create GitHub release** with generated changelog
+6. **Publish to npm** with the same version
+
+**Important**: Never create tags manually! Let semantic-release handle all versioning and tagging automatically.
+
+### Release Workflow Options
+
+**Option 1: Pull Request (Recommended)**
+```bash
+git checkout -b fix/critical-bug
+git commit -m "fix: resolve memory leak in time tracking"
+git push origin fix/critical-bug
+# Create PR → Review → Merge → Automatic release
+```
+
+**Option 2: Direct Push to Main**
+```bash
+git checkout main
+git pull origin main
+git commit -m "fix: resolve critical bug"
+git push origin main  # ← Automatic release triggered
+```
+
+**Option 3: Manual Release**
+- Use GitHub Actions workflow dispatch for emergency releases
+- Available in Actions → Release → Run workflow
+
+All options automatically create Git tags and releases! 🚀
+
 ## Bug Reports
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/your-username/clockify-auto-fill/issues).
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/mihazs/clockify-auto-fill/issues).
 
 **Great Bug Reports** tend to have:
 
