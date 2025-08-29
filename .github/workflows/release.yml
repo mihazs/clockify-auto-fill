@@ -21,6 +21,8 @@ jobs:
       id-token: write # Needed for npm provenance
       issues: write   # Needed to comment on released issues
       pull-requests: write # Needed to comment on released PRs
+      packages: write # Needed for npm publishing
+      actions: read   # Needed for semantic-release
 
     steps:
       - name: Checkout code
