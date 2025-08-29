@@ -8,4 +8,7 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(chalk|boxen|ora|ansi-.*|strip-.*|wrap-.*|string-.*|cli-.*|is-.*|escape-.*|camelcase|@sindresorhus)/)'
+  ],
 };

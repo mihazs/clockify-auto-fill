@@ -200,7 +200,7 @@ describe('ClockifyService', () => {
     });
 
     it('should create time entry with custom hours', () => {
-      const entry = clockifyService.createTimeEntry('2025-01-06', 'Test task', 8, 16);
+      const entry = clockifyService.createTimeEntry('2025-01-06', 'Test task', '08:00', '16:00');
 
       expect(entry.description).toBe('Test task');
       expect(entry.billable).toBe(false);

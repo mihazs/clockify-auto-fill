@@ -5,7 +5,9 @@ import { PersistenceService, TaskEntry, TimeEntryRecord } from '../src/services/
 import { DatabaseService } from '../src/services/database';
 
 jest.mock('fs-extra');
-jest.mock('os');
+jest.mock('os', () => ({
+  homedir: jest.fn(() => '/mock/home')
+}));
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockOs = os as jest.Mocked<typeof os>;
@@ -18,7 +20,7 @@ describe('PersistenceService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     mockOs.homedir.mockReturnValue('/mock/home');
-    mockFs.ensureDir.mockResolvedValue(undefined);
+    (mockFs.ensureDir as jest.Mock).mockResolvedValue(undefined);
     
     persistenceService = new PersistenceService();
     
@@ -232,7 +234,7 @@ describe('PersistenceService', () => {
   describe('Migration', () => {
     describe('migrateFromCSV', () => {
       it('should skip migration if no CSV exists', async () => {
-        mockFs.pathExists.mockResolvedValue(false);
+        (mockFs.pathExists as jest.Mock).mockResolvedValue(false);
 
         await persistenceService.migrateFromCSV();
 
@@ -242,7 +244,7 @@ describe('PersistenceService', () => {
 
       it('should skip migration if tasks already exist', async () => {
         const mockDb = (persistenceService as any).db;
-        mockFs.pathExists.mockResolvedValue(true);
+        (mockFs.pathExists as jest.Mock).mockResolvedValue(true);
         mockDb.get.mockResolvedValue({ count: 1 });
 
         await persistenceService.migrateFromCSV();

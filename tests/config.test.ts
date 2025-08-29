@@ -1,10 +1,38 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
+
+// Mock chalk and other ES modules that cause issues
+jest.mock('chalk', () => ({
+  default: {
+    green: jest.fn((str) => str),
+    red: jest.fn((str) => str),
+    yellow: jest.fn((str) => str),
+    blue: jest.fn((str) => str),
+  }
+}));
+
+jest.mock('boxen', () => ({
+  default: jest.fn((str) => str)
+}));
+
+jest.mock('ora', () => ({
+  default: jest.fn(() => ({
+    start: jest.fn(),
+    succeed: jest.fn(),
+    fail: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    stop: jest.fn(),
+  }))
+}));
+
 import { loadConfig, saveConfig, Config } from '../src/commands/config';
 
 jest.mock('fs-extra');
-jest.mock('os');
+jest.mock('os', () => ({
+  homedir: jest.fn(() => '/mock/home')
+}));
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockOs = os as jest.Mocked<typeof os>;
@@ -20,8 +48,8 @@ describe('Config Service', () => {
 
   describe('loadConfig', () => {
     it('should return empty config if file does not exist', async () => {
-      mockFs.ensureDir.mockResolvedValue(undefined);
-      mockFs.pathExists.mockResolvedValue(false);
+      (mockFs.ensureDir as jest.Mock).mockResolvedValue(undefined);
+      (mockFs.pathExists as jest.Mock).mockResolvedValue(false);
 
       const config = await loadConfig();
 
@@ -37,8 +65,8 @@ describe('Config Service', () => {
         projectId: 'project-456'
       };
 
-      mockFs.ensureDir.mockResolvedValue(undefined);
-      mockFs.pathExists.mockResolvedValue(true);
+      (mockFs.ensureDir as jest.Mock).mockResolvedValue(undefined);
+      (mockFs.pathExists as jest.Mock).mockResolvedValue(true);
       mockFs.readJson.mockResolvedValue(expectedConfig);
 
       const config = await loadConfig();
@@ -48,7 +76,7 @@ describe('Config Service', () => {
     });
 
     it('should return empty config on error', async () => {
-      mockFs.ensureDir.mockRejectedValue(new Error('Permission denied'));
+      (mockFs.ensureDir as jest.Mock).mockRejectedValue(new Error('Permission denied'));
 
       const config = await loadConfig();
 
@@ -63,7 +91,7 @@ describe('Config Service', () => {
         workspaceId: 'workspace-123'
       };
 
-      mockFs.ensureDir.mockResolvedValue(undefined);
+      (mockFs.ensureDir as jest.Mock).mockResolvedValue(undefined);
       mockFs.writeJson.mockResolvedValue(undefined);
 
       await saveConfig(config);
@@ -75,7 +103,7 @@ describe('Config Service', () => {
     it('should throw error if save fails', async () => {
       const config: Config = { clockifyApiKey: 'test-key' };
 
-      mockFs.ensureDir.mockResolvedValue(undefined);
+      (mockFs.ensureDir as jest.Mock).mockResolvedValue(undefined);
       mockFs.writeJson.mockRejectedValue(new Error('Write failed'));
 
       await expect(saveConfig(config)).rejects.toThrow('Write failed');

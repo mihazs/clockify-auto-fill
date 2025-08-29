@@ -83,8 +83,8 @@ describe('Date Utils', () => {
     });
 
     it('should handle month ending on weekend', () => {
-      expect(isLastBusinessDayOfMonth('2025-03-31')).toBe(false); // Monday, Mar 31 is not last business day
-      expect(isLastBusinessDayOfMonth('2025-03-28')).toBe(true);  // Friday, Mar 28 would be last business day if March ended on Sunday
+      expect(isLastBusinessDayOfMonth('2025-03-31')).toBe(true); // Monday, Mar 31 IS the last business day
+      expect(isLastBusinessDayOfMonth('2025-03-28')).toBe(false);  // Friday, Mar 28 is NOT the last business day (Mar 31 is a Monday)
     });
   });
 });
