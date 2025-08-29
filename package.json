@@ -1,0 +1,84 @@
+{
+  "name": "clockify-auto-fill",
+  "version": "1.0.0",
+  "description": "Automated time tracking for Clockify with Jira integration. Never forget to log your time again.",
+  "main": "dist/index.js",
+  "bin": {
+    "clockify-auto": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "dev:watch": "tsc --watch",
+    "prepublishOnly": "npm run build && npm test",
+    "semantic-release": "semantic-release",
+    "semantic-release:dry-run": "semantic-release --dry-run"
+  },
+  "keywords": [
+    "clockify",
+    "time-tracking",
+    "jira",
+    "automation",
+    "cli",
+    "productivity",
+    "timesheet",
+    "time-entry",
+    "work-tracking",
+    "reporting"
+  ],
+  "author": "Mihael Zamin Sousa",
+  "license": "MIT",
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.9",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.3.0",
+    "@types/pdfkit": "^0.17.2",
+    "@types/sqlite3": "^3.1.11",
+    "conventional-changelog-conventionalcommits": "^8.0.0",
+    "jest": "^30.1.1",
+    "semantic-release": "^23.0.0",
+    "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@commander-js/extra-typings": "^14.0.0",
+    "axios": "^1.11.0",
+    "boxen": "^8.0.1",
+    "chalk": "^5.6.0",
+    "csv-parser": "^3.2.0",
+    "csv-writer": "^1.6.0",
+    "date-holidays": "^3.25.1",
+    "dayjs": "^1.11.15",
+    "fs-extra": "^11.3.1",
+    "inquirer": "^12.9.4",
+    "node-cron": "^4.2.1",
+    "ora": "^8.2.0",
+    "pdfkit": "^0.17.1",
+    "sqlite3": "^5.1.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mihazs/clockify-auto-fill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mihazs/clockify-auto-fill/issues"
+  },
+  "homepage": "https://github.com/mihazs/clockify-auto-fill#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ]
+}
