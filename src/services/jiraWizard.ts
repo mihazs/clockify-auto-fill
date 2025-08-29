@@ -102,7 +102,7 @@ export class JiraWizardService {
           if (parsed.cloudId) {
             return parsed.cloudId;
           }
-        } catch (e) {
+        } catch {
           // If JSON parse fails, try regex
           const uuidMatch = response.data.match(/[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}/i);
           if (uuidMatch) {
@@ -144,7 +144,7 @@ export class JiraWizardService {
           return resources[0].id;
         }
       }
-    } catch (error) {
+    } catch {
       // For scoped tokens or when accessible-resources fails, try URL-based extraction
       // This is expected for scoped API tokens (ATATT)
     }

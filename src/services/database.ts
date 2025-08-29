@@ -2,7 +2,6 @@ import * as sqlite3 from 'sqlite3';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
-import { promisify } from 'util';
 
 const DATA_DIR = path.join(os.homedir(), '.clockify-auto-cli');
 const DB_FILE = path.join(DATA_DIR, 'clockify.db');

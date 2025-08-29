@@ -158,7 +158,7 @@ async function checkFirstRun(): Promise<void> {
         WizardUI.info('Setup skipped. You can run "clockify-auto setup" anytime to configure the application.');
       }
     }
-  } catch (error) {
+  } catch {
     // If there's an error checking first run, just continue silently
     // The user can always run setup manually
   }

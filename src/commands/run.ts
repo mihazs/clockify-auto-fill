@@ -5,7 +5,7 @@ import { JiraService } from '../services/jira';
 import { PersistenceService } from '../services/persistence';
 import { PDFService } from '../services/pdf';
 import { BusinessDayService } from '../utils/businessDay';
-import { getCurrentDate, isLastBusinessDayOfMonth, getPreviousWeekdays, getFirstDayOfMonth, getLastDayOfMonth, getDateRange, isWeekday } from '../utils/dateUtils';
+import { getCurrentDate, isLastBusinessDayOfMonth, getFirstDayOfMonth, getLastDayOfMonth, getDateRange, isWeekday } from '../utils/dateUtils';
 import dayjs from 'dayjs';
 
 export function createRunCommand(): Command {
@@ -150,7 +150,7 @@ async function fillMissingEntries(
         jiraTaskTitle = tasks[0].summary;
         console.log(`Using Jira task title: "${jiraTaskTitle}" for missing entries`);
       }
-    } catch (error) {
+    } catch {
       console.warn('Could not fetch Jira tasks, using fallback descriptions');
     }
   }

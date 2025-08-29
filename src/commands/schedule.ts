@@ -3,7 +3,7 @@ import * as cron from 'node-cron';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
@@ -84,7 +84,7 @@ async function disableScheduling(): Promise<void> {
   try {
     await execAsync(`pm2 delete ${PM2_PROCESS_NAME}`);
     console.log('Scheduling disabled successfully.');
-  } catch (error) {
+  } catch {
     console.log('Process was not running or already disabled.');
   }
 }
@@ -102,7 +102,7 @@ async function checkStatus(): Promise<void> {
     } else {
       console.log('Scheduling is disabled.');
     }
-  } catch (error) {
+  } catch {
     console.log('Scheduling is disabled or PM2 is not installed.');
   }
 }
@@ -113,7 +113,7 @@ async function restartScheduling(): Promise<void> {
   try {
     await execAsync(`pm2 restart ${PM2_PROCESS_NAME}`);
     console.log('Process restarted successfully.');
-  } catch (error) {
+  } catch {
     console.error('Failed to restart process. Trying to start fresh...');
     await enableScheduling();
   }
@@ -122,7 +122,7 @@ async function restartScheduling(): Promise<void> {
 async function ensurePM2Installed(): Promise<void> {
   try {
     await execAsync('pm2 --version');
-  } catch (error) {
+  } catch {
     throw new Error('PM2 is not installed. Please install it globally: npm install -g pm2');
   }
 }
@@ -178,7 +178,7 @@ module.exports = {
 async function startPM2Process(): Promise<void> {
   try {
     await execAsync(`pm2 delete ${PM2_PROCESS_NAME}`);
-  } catch (error) {
+  } catch {
     // Process might not exist, ignore error
   }
   
@@ -192,7 +192,6 @@ export function startScheduler(): void {
   cron.schedule('0 18 * * 1-5', () => {
     console.log('Running scheduled Clockify auto-fill...');
     
-    const { spawn } = require('child_process');
     const child = spawn('node', [path.join(__dirname, '../index.js'), 'run'], {
       stdio: 'inherit'
     });

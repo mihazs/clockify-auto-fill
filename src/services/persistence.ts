@@ -2,6 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
 import dayjs from 'dayjs';
+import csv from 'csv-parser';
 import { DatabaseService } from './database';
 
 export interface TaskEntry {
@@ -243,7 +244,6 @@ export class PersistenceService {
 
       console.log('Migrating tasks from CSV to SQLite...');
 
-      const csv = require('csv-parser');
       const tasks: any[] = [];
 
       await new Promise((resolve, reject) => {
