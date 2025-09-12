@@ -31,8 +31,9 @@ export class JiraService {
   async getCurrentTasks(): Promise<JiraIssue[]> {
     try {
       // Use a more specific JQL query to get recently assigned tasks
-      // This query prioritizes tasks that were recently updated AND assigned to current user
-      const jql = 'assignee = currentUser() AND status in ("To Do", "In Progress", "Selected for Development", "Open") ORDER BY updated DESC';
+      // This query gets all assigned tasks except those that are Done (universal status category)
+      // Using official Jira JQL syntax from Atlassian documentation
+      const jql = 'assignee = currentUser() AND statusCategory NOT IN ("Done") ORDER BY updated DESC';
       
       const response = await axios.get(`${this.baseUrl}/rest/api/3/search/jql`, {
         headers: {
