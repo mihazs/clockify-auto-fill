@@ -30,7 +30,9 @@ export class JiraService {
 
   async getCurrentTasks(): Promise<JiraIssue[]> {
     try {
-      const jql = 'assignee = currentUser() AND status != "Done" ORDER BY updated DESC';
+      // Use a more specific JQL query to get recently assigned tasks
+      // This query prioritizes tasks that were recently updated AND assigned to current user
+      const jql = 'assignee = currentUser() AND status in ("To Do", "In Progress", "Selected for Development", "Open") ORDER BY updated DESC';
       
       const response = await axios.get(`${this.baseUrl}/rest/api/3/search/jql`, {
         headers: {
@@ -40,8 +42,8 @@ export class JiraService {
         },
         params: {
           jql,
-          fields: 'key,summary,description,status',
-          maxResults: 50
+          fields: 'key,summary,description,status,updated',
+          maxResults: 10 // Reduced to get only the most recent tasks
         }
       });
 
@@ -84,14 +86,5 @@ export class JiraService {
       return `Task ${issueKey}`;
     }
   }
-
-  formatTasksForClockify(tasks: JiraIssue[]): string[] {
-    return tasks.map(task => {
-      const description = task.description 
-        ? `${task.key}: ${task.summary} - ${task.description.substring(0, 100)}...`
-        : `${task.key}: ${task.summary}`;
-      
-      return description.replace(/[;,\n\r]/g, ' ').trim();
-    });
-  }
 }
+

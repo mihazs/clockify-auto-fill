@@ -235,7 +235,7 @@ async function processCurrentDay(
     return;
   }
 
-  let description = 'General work';
+  let description = config.fallbackTaskDescription || 'Retro, refinement and planning';
   
   try {
     if (config.jiraBaseUrl && config.jiraEmail && config.jiraApiKey) {
@@ -243,7 +243,7 @@ async function processCurrentDay(
       const tasks = await jiraService.getCurrentTasks();
       
       if (tasks.length > 0) {
-        // Use just the task title (summary) as the description
+        // Use the latest assigned non-completed task (first in the ordered list)
         description = tasks[0].summary;
         
         await persistenceService.addTask({
@@ -253,20 +253,19 @@ async function processCurrentDay(
         });
         
         console.log(`Updated task description from Jira: ${description} (${tasks[0].key})`);
+      } else {
+        console.log(`No active Jira tasks found. Using fallback: ${description}`);
       }
     } else {
       const existingTask = await persistenceService.getTaskForDate(today);
       if (existingTask) {
         description = existingTask.description;
+      } else {
+        console.log(`No Jira configuration found. Using fallback: ${description}`);
       }
     }
   } catch (error) {
-    console.warn('Could not fetch from Jira, using default or existing task:', error);
-    
-    const existingTask = await persistenceService.getTaskForDate(today);
-    if (existingTask) {
-      description = existingTask.description;
-    }
+    console.warn(`Could not fetch from Jira, using fallback: ${description}`, error);
   }
 
   const timeEntry = clockifyService.createTimeEntry(today, description);

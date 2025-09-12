@@ -8,7 +8,7 @@
 
 **Automated time tracking for Clockify with Jira integration**
 
-*Never forget to log your time again. Automatically create time entries, sync with Jira tasks, and generate monthly reports.*
+*Automatically create time entries, sync with Jira tasks, and generate monthly reports.*
 
 [Features](#-features) • [Installation](#-quick-start) • [Quick Start](#-quick-start) • [Documentation](#-commands-reference) • [Contributing](#-contributing)
 
@@ -18,14 +18,18 @@
 
 - 🚀 **Automated Time Tracking**: Automatically creates daily time entries in Clockify
 - 🔄 **Missing Entries Detection**: Scans and fills gaps in your time tracking history with concurrent processing
-- 🎯 **Jira Integration**: Uses your assigned Jira task titles as time entry descriptions  
+- 🎯 **Smart Jira Integration**: Uses latest assigned non-completed Jira tasks with configurable fallback descriptions
 - ⏰ **Configurable Work Hours**: Set custom start/end times for your workday
-- 📊 **Monthly Reports**: Generates beautiful PDF reports at month-end
+- 📊 **Monthly Reports**: Generates PDF reports at month-end
 - ⚡ **High Performance**: Concurrent API calls with intelligent rate limiting (8x faster)
 - 🛡️ **2025 API Ready**: Updated for latest Clockify and Jira API versions
 - 💾 **SQLite Storage**: Reliable local database with automatic migrations
-- 🎨 **Interactive Setup**: Beautiful CLI wizard for easy configuration
-- ⚙️ **Flexible Scheduling**: Works with cron jobs, GitHub Actions, or manual execution
+- 🎨 **Interactive Setup**: CLI wizard for configuration
+- ⚙️ **Advanced Scheduling**: PM2-powered scheduler with catch-up runs and configurable schedules
+- 📈 **Analytics**: Time tracking analytics with financial insights
+- 💰 **Financial Tracking**: Hourly rate configuration with earnings calculations and projections
+- 📋 **Log Management**: Log access and monitoring via CLI
+- 🔧 **Configuration Management**: Config management with help and validation
 
 ## 🚀 Quick Start
 
@@ -121,20 +125,52 @@ The wizard will:
 
 | Command | Description |
 |---------|-------------|
-| `clockify-auto config` | Open configuration menu |
+| `clockify-auto config list` | List all configuration keys and current values |
+| `clockify-auto config help` | Show all available configuration options |
+| `clockify-auto config get [key]` | Get specific configuration value |
+| `clockify-auto config set <key> <value>` | Set configuration value |
 | `clockify-auto config wizard` | Re-run setup wizard |
 | `clockify-auto config validate` | Validate current configuration |
 | `clockify-auto config reset` | Reset configuration |
 | `clockify-auto config export` | Export configuration to file |
 | `clockify-auto config import <file>` | Import configuration from file |
-| `clockify-auto config set defaultStartTime "09:00"` | Set work start time |
-| `clockify-auto config set defaultEndTime "17:00"` | Set work end time |
 
-### Advanced Commands
+### Scheduling & Automation
 
 | Command | Description |
 |---------|-------------|
-| `clockify-auto schedule` | Set up automated scheduling |
+| `clockify-auto schedule enable` | Enable automated scheduling with PM2 |
+| `clockify-auto schedule disable` | Disable automated scheduling |
+| `clockify-auto schedule status` | Check scheduler status |
+| `clockify-auto schedule set-time "18:00"` | Set schedule time |
+| `clockify-auto schedule set-days "[1,2,3,4,5]"` | Set schedule days |
+| `clockify-auto schedule show-config` | Show scheduler configuration |
+| `clockify-auto schedule history` | Show execution history |
+
+### Analytics & Reporting
+
+| Command | Description |
+|---------|-------------|
+| `clockify-auto analytics` | Show month-to-date analytics summary |
+| `clockify-auto analytics summary` | Customizable analytics summary |
+| `clockify-auto analytics time` | Detailed time tracking analytics |
+| `clockify-auto analytics tasks` | Task and project analytics |
+| `clockify-auto analytics scheduler` | Scheduler performance analytics |
+
+### Log Management
+
+| Command | Description |
+|---------|-------------|
+| `clockify-auto logs` | Show recent scheduler logs |
+| `clockify-auto logs show -f` | Follow logs in real-time |
+| `clockify-auto logs show -t error` | Show error logs |
+| `clockify-auto logs path` | Show log file locations |
+| `clockify-auto logs clear` | Clear all log files |
+
+### Task Management
+
+| Command | Description |
+|---------|-------------|
 | `clockify-auto tasks` | Manage task descriptions |
 
 ## ⚙️ Configuration
@@ -153,7 +189,11 @@ Configuration is stored in `~/.clockify-auto/config.json`:
   "jiraApiKey": "your-jira-token",
   "reportDir": "/path/to/reports",
   "defaultStartTime": "09:00",
-  "defaultEndTime": "17:00"
+  "defaultEndTime": "17:00",
+  "scheduleTime": "18:00",
+  "scheduleDays": [1, 2, 3, 4, 5],
+  "fallbackTaskDescription": "Retro, refinement and planning",
+  "hourlyRate": 35.50
 }
 ```
 
@@ -203,7 +243,37 @@ If not configured, the default work hours are **9:00 AM to 5:00 PM**.
 
 ## 🔄 Automation & Scheduling
 
-### Cron Job (Linux/macOS)
+### Built-in PM2 Scheduler
+
+The recommended approach is to use the built-in PM2-powered scheduler:
+
+```bash
+# Enable automated scheduling
+clockify-auto schedule enable
+
+# Configure schedule time (default: 18:00)
+clockify-auto schedule set-time "18:00"
+
+# Configure schedule days (default: weekdays)
+clockify-auto schedule set-days "[1,2,3,4,5]"
+
+# Check scheduler status
+clockify-auto schedule status
+
+# View execution history
+clockify-auto schedule history
+
+# Disable scheduling
+clockify-auto schedule disable
+```
+
+**Features:**
+- **Catch-up runs**: Automatically runs missed schedules when system restarts
+- **Persistent logging**: All runs logged to `~/.clockify-auto-cli/` directory
+- **Process management**: Uses PM2 for reliable background execution
+- **Configurable timing**: Flexible schedule configuration
+
+### Alternative: Cron Job (Linux/macOS)
 
 Add to your crontab (`crontab -e`):
 
@@ -260,6 +330,79 @@ jobs:
 3. Set trigger (e.g., daily at 9 AM)
 4. Set action: `clockify-auto run`
 
+## 📈 Analytics & Financial Tracking
+
+### Time Tracking Analytics
+
+Get insights into your time tracking patterns:
+
+```bash
+# Month-to-date summary (default)
+clockify-auto analytics
+
+# Custom date ranges
+clockify-auto analytics summary --days 7
+clockify-auto analytics summary --from 2025-01-01 --to 2025-01-31
+
+# Detailed time patterns
+clockify-auto analytics time
+
+# Task analytics
+clockify-auto analytics tasks
+
+# Scheduler performance
+clockify-auto analytics scheduler
+
+# Export analytics to CSV
+clockify-auto analytics time --export report.csv
+```
+
+### Financial Tracking
+
+Configure hourly rate for earnings calculations:
+
+```bash
+# Set your hourly rate
+clockify-auto config set hourlyRate 35.50
+
+# View financial analytics
+clockify-auto analytics
+
+# Analytics will show:
+# - Period earnings
+# - Monthly progress (working days, hours worked)
+# - Expected vs actual remuneration
+# - Projected month-end earnings
+```
+
+**Financial Analytics Include:**
+- Current month progress tracking
+- Hours worked vs expected hours
+- Remuneration earned vs expected
+- Projected month-end earnings based on current pace
+- Working days calculation (excludes weekends)
+
+### Log Management
+
+Monitor scheduler activity and troubleshoot issues:
+
+```bash
+# View recent scheduler logs
+clockify-auto logs
+
+# Follow logs in real-time
+clockify-auto logs show -f
+
+# View error logs
+clockify-auto logs show -t error
+
+# Show log file locations
+clockify-auto logs path
+
+# Clear logs
+clockify-auto logs clear
+```
+
 ## 📊 Reports
 
 ### Monthly PDF Reports
@@ -285,9 +428,17 @@ Example report structure:
 
 When configured, the tool will:
 
-1. 🎯 **Fetch Assigned Tasks**: Gets your currently assigned Jira issues
+1. 🎯 **Fetch Latest Tasks**: Gets your most recently assigned non-completed Jira issues
 2. 📝 **Use Task Titles**: Uses the issue summary as the time entry description
-3. 🔄 **Smart Fallback**: Falls back to stored descriptions or "General work"
+3. 🔄 **Configurable Fallback**: Uses configurable fallback description when no active tasks found
+
+**Configure Fallback Description:**
+```bash
+# Set custom fallback description
+clockify-auto config set fallbackTaskDescription "Planning and meetings"
+
+# Default fallback is "Retro, refinement and planning"
+```
 
 **Supported Jira Setups:**
 - Jira Cloud (2025 API v3 compatible)
@@ -543,10 +694,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📈 Roadmap
 
+- [x] **Analytics & Financial Tracking**: Time tracking insights and earnings calculations  
+- [x] **Advanced Scheduling**: PM2-powered scheduler with catch-up functionality
+- [x] **Log Management**: Comprehensive logging and monitoring tools
+- [x] **Smart Jira Integration**: Latest task prioritization with configurable fallbacks
+- [x] **Configuration Management**: Complete config system with help and validation
 - [ ] **Multiple Project Support**: Handle multiple Clockify projects
-- [ ] **Custom Time Templates**: Configurable start/end times per day
 - [ ] **Team Integration**: Bulk operations for team management
-- [ ] **Advanced Reporting**: Custom report templates and formats
 - [ ] **Web Dashboard**: Optional web interface for management
 - [ ] **Slack Integration**: Notifications and commands via Slack
 - [ ] **Timezone Support**: Better handling of different timezones

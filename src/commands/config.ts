@@ -17,6 +17,10 @@ export interface Config {
   reportDir?: string;
   defaultStartTime?: string; // Format: HH:mm (e.g., "09:00")
   defaultEndTime?: string;   // Format: HH:mm (e.g., "17:00")
+  scheduleTime?: string;     // Format: HH:mm (e.g., "18:00") - when to run auto-fill
+  scheduleDays?: number[];   // Days of week: 0=Sunday, 1=Monday, etc. Default: [1,2,3,4,5] (weekdays)
+  fallbackTaskDescription?: string; // Description to use when no active Jira tasks found
+  hourlyRate?: number;       // Hourly rate for remuneration calculations
 }
 
 const CONFIG_DIR = path.join(os.homedir(), '.clockify-auto-cli');
@@ -80,7 +84,11 @@ export function createConfigCommand(): Command {
         'jiraApiKey',
         'reportDir',
         'defaultStartTime',
-        'defaultEndTime'
+        'defaultEndTime',
+        'scheduleTime',
+        'scheduleDays',
+        'fallbackTaskDescription',
+        'hourlyRate'
       ];
 
       if (!validKeys.includes(key)) {
@@ -90,25 +98,58 @@ export function createConfigCommand(): Command {
       }
 
       // Validate time format for time-related keys
-      if (key === 'defaultStartTime' || key === 'defaultEndTime') {
+      if (key === 'defaultStartTime' || key === 'defaultEndTime' || key === 'scheduleTime') {
         if (!isValidTimeFormat(value)) {
           console.error(`Invalid time format: ${value}. Use HH:mm format (e.g., "09:00")`);
           return;
         }
         
         // If both times are set, validate the range
-        const otherTimeKey = key === 'defaultStartTime' ? 'defaultEndTime' : 'defaultStartTime';
-        const otherTime = currentConfig[otherTimeKey as keyof Config];
-        
-        if (otherTime && typeof otherTime === 'string') {
-          const startTime = key === 'defaultStartTime' ? value : otherTime;
-          const endTime = key === 'defaultEndTime' ? value : otherTime;
+        if (key === 'defaultStartTime' || key === 'defaultEndTime') {
+          const otherTimeKey = key === 'defaultStartTime' ? 'defaultEndTime' : 'defaultStartTime';
+          const otherTime = currentConfig[otherTimeKey as keyof Config];
           
-          const validation = validateTimeRange(startTime, endTime);
-          if (!validation.valid) {
-            console.error(`Time validation failed: ${validation.error}`);
+          if (otherTime && typeof otherTime === 'string') {
+            const startTime = key === 'defaultStartTime' ? value : otherTime;
+            const endTime = key === 'defaultEndTime' ? value : otherTime;
+            
+            const validation = validateTimeRange(startTime, endTime);
+            if (!validation.valid) {
+              console.error(`Time validation failed: ${validation.error}`);
+              return;
+            }
+          }
+        }
+      }
+
+      // Validate hourly rate
+      if (key === 'hourlyRate') {
+        const rate = parseFloat(value);
+        if (isNaN(rate) || rate <= 0) {
+          console.error('Invalid hourly rate. Must be a positive number (e.g., "25.50")');
+          return;
+        }
+        (currentConfig as any)[key] = rate;
+        await saveConfig(currentConfig);
+        console.log(`Set ${key} = $${rate.toFixed(2)}`);
+        return;
+      }
+
+      // Validate schedule days
+      if (key === 'scheduleDays') {
+        try {
+          const days = JSON.parse(value) as number[];
+          if (!Array.isArray(days) || !days.every(day => typeof day === 'number' && day >= 0 && day <= 6)) {
+            console.error('Invalid scheduleDays format. Use JSON array of numbers 0-6 (e.g., "[1,2,3,4,5]" for weekdays)');
             return;
           }
+          (currentConfig as any)[key] = days;
+          await saveConfig(currentConfig);
+          console.log(`Set ${key} = ${JSON.stringify(days)}`);
+          return;
+        } catch (error) {
+          console.error('Invalid JSON format for scheduleDays. Use JSON array (e.g., "[1,2,3,4,5]")');
+          return;
         }
       }
 
@@ -127,14 +168,23 @@ export function createConfigCommand(): Command {
       if (key) {
         const value = (currentConfig as any)[key];
         if (value !== undefined) {
-          console.log(`${key} = ${key.toLowerCase().includes('key') ? '*'.repeat(value.length) : value}`);
+          const displayValue = key.toLowerCase().includes('key') ? '*'.repeat(String(value).length) : 
+                              key === 'hourlyRate' ? `$${parseFloat(value).toFixed(2)}` : value;
+          console.log(`${key} = ${displayValue}`);
         } else {
           console.log(`${key} is not set`);
         }
       } else {
         console.log('Current configuration:');
         Object.entries(currentConfig).forEach(([k, v]) => {
-          const displayValue = k.toLowerCase().includes('key') ? '*'.repeat(String(v).length) : v;
+          let displayValue;
+          if (k.toLowerCase().includes('key')) {
+            displayValue = '*'.repeat(String(v).length);
+          } else if (k === 'hourlyRate') {
+            displayValue = `$${parseFloat(String(v)).toFixed(2)}`;
+          } else {
+            displayValue = v;
+          }
           console.log(`  ${k} = ${displayValue}`);
         });
       }
@@ -199,6 +249,86 @@ export function createConfigCommand(): Command {
     .argument('<file>', 'Input file path')
     .action(async (file: string) => {
       await importConfiguration(file);
+    });
+
+  config
+    .command('list')
+    .description('List all configuration keys and their current values')
+    .action(async () => {
+      const currentConfig = await loadConfig();
+      
+      if (Object.keys(currentConfig).length === 0) {
+        console.log('📋 No configuration found');
+        console.log('💡 Run "clockify-auto config wizard" to get started');
+        return;
+      }
+      
+      console.log('📋 Current Configuration');
+      console.log('═'.repeat(60));
+      Object.entries(currentConfig).forEach(([k, v]) => {
+        let displayValue;
+        if (k.toLowerCase().includes('key')) {
+          displayValue = '*'.repeat(String(v).length);
+        } else if (k === 'hourlyRate') {
+          displayValue = `$${parseFloat(String(v)).toFixed(2)}`;
+        } else {
+          displayValue = v;
+        }
+        console.log(`  ${k.padEnd(25)} = ${displayValue}`);
+      });
+      
+      console.log('\n💡 Use "clockify-auto config help" to see all available options');
+    });
+
+  config
+    .command('help')
+    .description('Show all available configuration options')
+    .action(async () => {
+      console.log('📋 Available Configuration Options');
+      console.log('═'.repeat(60));
+      
+      console.log('\n🔗 Clockify Settings (Required):');
+      console.log('  clockifyApiKey      - Your Clockify API key');
+      console.log('  workspaceId         - Clockify workspace ID');
+      console.log('  projectId           - Clockify project ID');
+      
+      console.log('\n🔗 Jira Integration (Optional):');
+      console.log('  jiraBaseUrl         - Jira instance URL (e.g., "https://company.atlassian.net")');
+      console.log('  jiraEmail           - Your Jira email address');
+      console.log('  jiraApiKey          - Jira API token');
+      
+      console.log('\n⏰ Time Settings:');
+      console.log('  defaultStartTime    - Default work start time (HH:mm format, e.g., "09:00")');
+      console.log('  defaultEndTime      - Default work end time (HH:mm format, e.g., "17:00")');
+      console.log('  scheduleTime        - When to run auto-fill (HH:mm format, e.g., "18:00")');
+      console.log('  scheduleDays        - Days to run scheduler (JSON array, e.g., "[1,2,3,4,5]")');
+      console.log('                        Days: 0=Sunday, 1=Monday, ..., 6=Saturday');
+      
+      console.log('\n📋 Task Settings:');
+      console.log('  fallbackTaskDescription - Description when no Jira tasks found');
+      console.log('                           (default: "Retro, refinement and planning")');
+      
+      console.log('\n💰 Financial Settings:');
+      console.log('  hourlyRate          - Your hourly rate for financial analytics');
+      console.log('                        (positive number, e.g., "25.50")');
+      
+      console.log('\n📁 Other Settings:');
+      console.log('  reportDir           - Directory for PDF reports');
+      
+      console.log('\n💡 Usage Examples:');
+      console.log('  clockify-auto config set clockifyApiKey "your-api-key"');
+      console.log('  clockify-auto config set defaultStartTime "09:00"');
+      console.log('  clockify-auto config set scheduleDays "[1,2,3,4,5]"');
+      console.log('  clockify-auto config set hourlyRate 35.50');
+      console.log('  clockify-auto config set fallbackTaskDescription "Planning and meetings"');
+      
+      console.log('\n🔍 Other Commands:');
+      console.log('  clockify-auto config list         - List all current configuration values');
+      console.log('  clockify-auto config get [key]    - View configuration (all or specific key)');
+      console.log('  clockify-auto config wizard       - Interactive setup wizard');
+      console.log('  clockify-auto config validate     - Test all connections');
+      console.log('  clockify-auto config export       - Export config to file');
+      console.log('  clockify-auto config reset        - Reset configuration');
     });
 
   return config;

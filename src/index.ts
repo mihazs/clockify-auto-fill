@@ -6,6 +6,8 @@ import { createRunCommand } from './commands/run';
 import { createScheduleCommand } from './commands/schedule';
 import { createTasksCommand } from './commands/tasks';
 import { createSetupCommand } from './commands/setup';
+import { createLogsCommand } from './commands/logs';
+import { createAnalyticsCommand } from './commands/analytics';
 
 const program = new Command();
 
@@ -19,6 +21,8 @@ program.addCommand(createConfigCommand());
 program.addCommand(createRunCommand());
 program.addCommand(createScheduleCommand());
 program.addCommand(createTasksCommand());
+program.addCommand(createLogsCommand());
+program.addCommand(createAnalyticsCommand());
 
 program
   .command('info')
